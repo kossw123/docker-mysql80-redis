@@ -1,0 +1,4 @@
+.env             # Local environment secrets
+*.log            # Log files
+node_modules/    # Dependency folders (if using Node.js)
+dist/            # Compiled build outputs
