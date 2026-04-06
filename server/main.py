@@ -3,19 +3,16 @@ from db import Base, engine, SessionLocal
 from models import Product
 from redis_client import redis_client
 import json
+from contextlib import asynccontextmanager
 
-app = FastAPI()
-
-# 테이블 생성
-Base.metadata.create_all(bind=engine)
 
 # DB 세션
 def get_db():
     return SessionLocal()
 
-# 초기 데이터 넣기
-@app.on_event("startup")
-def seed_data():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
     db = get_db()
     if db.query(Product).count() == 0:
         db.add_all([
@@ -24,6 +21,22 @@ def seed_data():
         ])
         db.commit()
     db.close()
+    yield
+    
+
+app = FastAPI(lifespan=lifespan)
+
+# 초기 데이터 넣기
+# @app.on_event("startup")
+# def seed_data():
+#     db = get_db()
+#     if db.query(Product).count() == 0:
+#         db.add_all([
+#             Product(name="apple", price=1000),
+#             Product(name="banana", price=2000),
+#         ])
+#         db.commit()
+#     db.close()
 
 # 🔥 캐싱 적용 API
 @app.get("/products")
